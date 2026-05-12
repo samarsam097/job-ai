@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>AI Job Matcher</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>AI Job Matcher</h1>
+
+        <div class="upload-section">
+            <input type="file" id="resumeInput">
+
+            
+
+    <div class="filters">
+
+        <input
+    type="text"
+    id="role"
+    placeholder="Backend, AI..."
+/>
+
+<select id="country">
+
+    <option value="all">
+    Everywhere
+</option>
+
+    <option value="de">
+        Germany
+    </option>
+
+    <option value="us">
+        United States
+    </option>
+
+    <option value="gb">
+        United Kingdom
+    </option>
+
+    <option value="at">
+        Austria
+    </option>
+
+    <option value="ca">
+        Canada
+    </option>
+    <option value="in">
+        India
+    </option>
+
+</select>
+</div>
+
+
+            <button onclick="uploadResume()">
+                Find Matching Jobs
+            </button>
+        </div>
+
+        <div id="results"></div>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>

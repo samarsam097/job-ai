@@ -1,0 +1,22 @@
+skills_list = [
+    "python",
+    "javascript",
+    "node.js",
+    "express.js",
+    "fastapi",
+    "html",
+    "css",
+    "sql",
+    "machine learning",
+    "git",
+    "github",
+    "supabase",
+    "vercel",
+    "rest api",
+    "prompt engineering",
+    "llm",
+    "ai",
+    "backend",
+    "frontend",
+    "react"
+]
