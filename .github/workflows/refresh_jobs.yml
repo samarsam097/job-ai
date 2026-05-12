@@ -1,0 +1,41 @@
+name: Refresh Jobs
+
+on:
+
+  schedule:
+    - cron: "0 */2 * * *"
+
+  workflow_dispatch:
+
+jobs:
+
+  refresh-jobs:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up Python
+        uses: actions/setup-python@v5
+
+        with:
+          python-version: "3.12"
+
+      - name: Install Dependencies
+
+        run: |
+
+          python -m pip install --upgrade pip
+
+          pip install -r backend/requirements.txt
+
+      - name: Run Job Update Script
+
+        run: |
+
+          cd backend
+
+          python -m scripts.update_jobs
