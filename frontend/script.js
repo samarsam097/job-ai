@@ -102,9 +102,17 @@ async function uploadResume() {
                         ${job.location}
                     </p>
                     <p class="source">
-    Source:
-    ${job.source}
-</p>
+                        Source:
+                    ${job.source}
+                    </p>
+
+                <p class="skills">
+                Skills:
+                ${
+                job.matched_skills.join(", ")
+                || "No matched skills"
+                }
+                </p>
 
                     <p>
                         ${(job.description || "No description")
@@ -114,6 +122,11 @@ async function uploadResume() {
                     <p>
                         Match Score:
                         ${job.match_percentage}%
+                    </p>
+
+                    <p>
+                        Experience:
+                        ${job.experience_score}
                     </p>
 
                     <a
@@ -136,4 +149,39 @@ async function uploadResume() {
             <p>Something went wrong.</p>
         `;
     }
+}
+async function saveJob(jobId) {
+
+    const token = localStorage.getItem(
+        "token"
+    )
+
+    if (!token) {
+
+        alert("Please login first")
+
+        return
+    }
+
+    const response = await fetch(
+
+        `http://127.0.0.1:8000/save-job/${jobId}`,
+
+        {
+            method: "POST",
+
+            headers: {
+
+                "Authorization":
+                `Bearer ${token}`
+
+            }
+        }
+    )
+
+    const data = await response.json()
+
+    console.log(data)
+
+    alert(data.message)
 }
