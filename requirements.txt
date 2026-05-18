@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+python-dotenv
+sentence-transformers
+faiss-cpu
+numpy
+requests
+apscheduler
+passlib[bcrypt]
+python-jose
+python-multipart
+pymupdf
+scikit-learn
+torch
+transformers
