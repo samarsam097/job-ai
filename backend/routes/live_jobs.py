@@ -21,6 +21,13 @@ from database.connection import (
 
 from database.models import Job
 
+from services.skills import (
+    extract_skills
+)
+
+from services.resume_parser import (
+    parse_resume
+)
 
 router = APIRouter()
 
@@ -116,6 +123,26 @@ async def live_job_search(
 
         resume_text += page.get_text()
 
+    parsed_resume = parse_resume(
+            resume_text
+    )
+
+    resume_skills = extract_skills(
+
+            parsed_resume["skills"]
+
+            +
+
+            "\n"
+
+            +
+
+            parsed_resume["projects"]
+
+    )
+
+        
+    
     # -----------------------------
     # RESUME EMBEDDING
     # -----------------------------
@@ -275,6 +302,36 @@ async def live_job_search(
             indices[0][i]
         ]
 
+        job_text = f"""
+
+        {matched_job.title}
+
+        {matched_job.description}
+
+        """.lower()
+
+        job_skills = extract_skills(
+            job_text
+        )
+
+        matched_skills = list(
+
+            set(resume_skills)
+
+            &
+
+            set(job_skills)
+
+        )           
+
+        skill_score = len(
+            matched_skills
+        ) * 4
+
+        # -----------------------------
+# SEMANTIC SCORE
+# -----------------------------
+
         similarity = float(
 
             1 / (
@@ -283,29 +340,37 @@ async def live_job_search(
 
         )
 
-        match_percentage = float(
+        semantic_score = similarity * 100
 
-            round(
+# -----------------------------
+# SKILL SCORE
+# -----------------------------
 
-                min(
-                    100,
-                    similarity * 160
-                ),
+        skill_score = min(
 
-                2
-            )
+            30,
+
+            len(matched_skills) * 6
 
         )
 
-        # -----------------------------
-        # BOOSTS
-        # -----------------------------
+# -----------------------------
+# TITLE SCORE
+# -----------------------------
+
+        title_score = 0
 
         if role.lower() in (
             matched_job.title or ""
         ).lower():
 
-            match_percentage += 15
+            title_score = 15
+
+# ------------------------  -----
+# COUNTRY SCORE
+# -----------------------------
+
+        country_score = 0
 
         if country != "all":
 
@@ -313,13 +378,64 @@ async def live_job_search(
                 matched_job.location or ""
             ).lower():
 
-                match_percentage += 10
+                country_score = 10
 
-        match_percentage = min(
-            100,
-            match_percentage
+        experience_score = 0
+
+        experience_text = parsed_resume[
+            "experience"
+        ].lower()
+
+        job_text_lower = job_text.lower()
+
+        experience_words = experience_text.split()
+
+        matches = 0
+
+        for word in experience_words:
+
+            if len(word) < 4:
+                continue
+
+            if word in job_text_lower:
+
+                 matches += 1
+
+        experience_score = min(
+            20,
+            matches * 0.5
         )
 
+# -----------------------------
+# FINAL WEIGHTED SCORE
+# -----------------------------
+
+        final_score = (
+
+            semantic_score * 0.45
+
+            +
+
+            skill_score * 0.25
+
+            +
+
+            experience_score * 0.20
+
+            +
+
+            title_score * 0.07
+
+            +
+
+            country_score * 0.03
+
+        )
+
+        match_percentage = round(
+            min(100, final_score),2)
+        
+        
         # -----------------------------
         # RESULT OBJECT
         # -----------------------------
@@ -345,7 +461,13 @@ async def live_job_search(
             matched_job.source,
 
             "match_percentage":
-            float(match_percentage)
+            float(match_percentage),
+
+            "matched_skills":
+            matched_skills,
+
+            "experience_score":
+            round(experience_score, 2),
 
         })
 

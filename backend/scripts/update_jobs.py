@@ -1,3 +1,21 @@
+import sys
+
+import os
+
+sys.path.append(
+
+    os.path.dirname(
+
+        os.path.dirname(
+
+            os.path.abspath(__file__)
+
+        )
+
+    )
+
+)
+
 import re
 import os
 import pickle
@@ -17,7 +35,6 @@ from database.models import Job
 from providers.aggregator import (
     fetch_all_jobs
 )
-
 
 # -----------------------------
 # LOAD MODEL
@@ -86,6 +103,8 @@ print(
 # -----------------------------
 
 db = SessionLocal()
+
+print("Deleting old jobs...")
 
 db.query(Job).delete()
 
@@ -222,6 +241,8 @@ embeddings = np.array(
 
 job_ids = []
 
+db_jobs = []
+
 print(
     "Saving jobs to database..."
 )
@@ -243,15 +264,35 @@ for idx, job in enumerate(clean_jobs):
         source=job["source"]
     )
 
-    db.add(db_job)
+    db_jobs.append(db_job)
 
-    db.commit()
+    if (idx + 1) % 50 == 0:
 
-    db.refresh(db_job)
+        print(
+            f"Prepared {idx + 1} jobs"
+        )
 
-    job_ids.append(
-        db_job.id
-    )
+# -----------------------------
+# SINGLE COMMIT
+# -----------------------------
+
+db.add_all(db_jobs)
+
+db.commit()
+
+# -----------------------------
+# GET IDS
+# -----------------------------
+
+for job in db_jobs:
+
+    db.refresh(job)
+
+    job_ids.append(job.id)
+
+print(
+    "Database save complete"
+)
 
 # -----------------------------
 # CREATE FAISS INDEX
@@ -272,12 +313,20 @@ index.add(
 )
 
 # -----------------------------
-# SAVE FAISS
+# TEMP FILE PATHS
 # -----------------------------
 
 temp_index_path = (
     "data/jobs_new.index"
 )
+
+temp_ids_path = (
+    "data/job_ids_new.pkl"
+)
+
+# -----------------------------
+# SAVE TEMP FILES
+# -----------------------------
 
 faiss.write_index(
 
@@ -287,14 +336,6 @@ faiss.write_index(
 
 )
 
-# -----------------------------
-# SAVE JOB IDS
-# -----------------------------
-
-temp_ids_path = (
-    "data/job_ids_new.pkl"
-)
-
 with open(
 
     temp_ids_path,
@@ -302,12 +343,17 @@ with open(
     "wb"
 
 ) as f:
-    
-    # -----------------------------
+
+    pickle.dump(
+        job_ids,
+        f
+    )
+
+# -----------------------------
 # ATOMIC REPLACEMENT
 # -----------------------------
 
-    os.replace(
+os.replace(
 
     temp_index_path,
 
@@ -322,10 +368,5 @@ os.replace(
     "data/job_ids.pkl"
 
 )
-
-pickle.dump(
-        job_ids,
-        f
-    )
 
 print("DONE!")
