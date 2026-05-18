@@ -1,6 +1,7 @@
 import sys
 
 import os
+from database.models import SavedJob
 
 sys.path.append(
 
@@ -103,6 +104,12 @@ print(
 # -----------------------------
 
 db = SessionLocal()
+
+print("Deleting old saved jobs...")
+
+db.query(SavedJob).delete()
+
+db.commit()
 
 print("Deleting old jobs...")
 
